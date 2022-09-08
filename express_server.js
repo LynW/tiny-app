@@ -19,7 +19,7 @@ const urlDatabase = {
 app.get("/", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies.username 
+    user: users[req.cookies["user_id"]] 
   };
   res.render("urls_index", templateVars);
 });
@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies.username 
+    user: users[req.cookies["user_id"]] 
   };
   res.render("urls_index", templateVars);
 });
@@ -50,7 +50,7 @@ app.post("/urls/:id/delete", (req, res) => {
 //Show the create url page
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    username: req.cookies.username
+    user: users[req.cookies["user_id"]]
   };
   res.render('urls_new', templateVars);
 });
@@ -60,7 +60,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: req.params.id, 
     longURL: urlDatabase[req.params.id],
-    username: req.cookies.username
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_show", templateVars);
 });
@@ -84,22 +84,28 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/register", (req, res) => {
   const templateVars = { 
-    username: req.cookies.username
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_register", templateVars);
 });
 
 app.post('/register', (req, res) => {
-  const newUserID = generateRandomString();
-  const newUser = {
-    id: newUserID,
-    email: req.body.email,
-    password: req.body.password
-  };
-  users[newUserID] = newUser;
-  res.cookie('user_id', newUserID);
-  console.log(users);
-  res.redirect('/urls');
+  const userExists = emailLookup(users, req.body.email);
+  console.log(userExists);
+  // checks if email/password are empty/email registered
+  if (!req.body.email || !req.body.password || userExists) {
+    res.send("400 - Bad Request");
+  } else {
+    const newUserID = generateRandomString();
+    const newUser = {
+      id: newUserID,
+      email: req.body.email,
+      password: req.body.password
+    };
+    users[newUserID] = newUser;
+    res.cookie('user_id', newUserID);
+    res.redirect('/urls');
+  }
 });
 
 app.get("/login", (req, res) => {
@@ -120,7 +126,12 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');;
+  res.redirect('/urls');
+});
+
+app.get("/logout", (req, res) => {
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -132,3 +143,12 @@ function generateRandomString() {
   let randomString = Math.random().toString(36).substring(2, 8);
   return randomString;
 }
+
+const emailLookup = function(usersDatabase, email) {
+  for (let user in usersDatabase) {
+    if (usersDatabase[user].email === email) {
+      return true;
+    }
+  }
+  return false;
+};
