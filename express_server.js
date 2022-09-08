@@ -3,7 +3,18 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 app.use(cookieParser())
-const users = {};
+let users = { 
+  "userRandomID": {
+    id: "user1ID", 
+    email: "user@gmail.com", 
+    password: "123"
+  },
+ "user2RandomID": {
+    id: "user2ID", 
+    email: "user2@gmail.com", 
+    password: "321"
+  }
+}
 
 const PORT = 8080; // default port 8080
 
