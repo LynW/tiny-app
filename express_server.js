@@ -82,6 +82,10 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+app.get("/users.json", (req, res) => {
+  res.json(users);
+});
+
 //Show our register page
 app.get("/register", (req, res) => {
   const templateVars = { 
@@ -128,7 +132,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  req.session = null;
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
