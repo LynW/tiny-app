@@ -82,6 +82,7 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+//Show our register page
 app.get("/register", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
@@ -89,6 +90,7 @@ app.get("/register", (req, res) => {
   res.render("urls_register", templateVars);
 });
 
+//Creates user and cookie session
 app.post('/register', (req, res) => {
   const userExists = emailLookup(users, req.body.email);
   console.log(userExists);
@@ -109,29 +111,24 @@ app.post('/register', (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect("/urls");
+  const templateVars = { 
+    user: users[req.cookies["user_id"]]
+  };
+  res.render('urls_login', templateVars);
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect("/urls");
-});
-
-app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  console.log('Cookies: ', req.cookies)
-  console.log('Signed Cookies: ', req.signedCookies)
-  res.redirect("/urls");
+  const userExists = emailLookup(users, req.body.email);
+  if (!userExists || users[userExists].password !== req.body.password) {
+    res.send("403 - Access Forbidden");
+  } else {
+  res.cookie('user_id', userExists);
+  res.redirect('/urls');
+  }
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');;
-  res.redirect('/urls');
-});
-
-app.get("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -147,7 +144,7 @@ function generateRandomString() {
 const emailLookup = function(usersDatabase, email) {
   for (let user in usersDatabase) {
     if (usersDatabase[user].email === email) {
-      return true;
+      return user;
     }
   }
   return false;
