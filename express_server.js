@@ -154,27 +154,31 @@ app.get("/urls/:id", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
   const user = req.cookies["user_id"];
   const databaseOb = urldb[req.params.id];
-  const userUrls = urlsForUser(urlDatabase, req.cookies["user_id"]);
+  const userUrls = urlsForUser(urlDatabase, user);
   const templateVars = {
     id: req.params.id,
-    longURL: urldb[req.params.id],
+    longURL: databaseOb,
     user: users[user]
   };
 
-  // console.log("user:");
-  // console.log(user)
+  // console.log("userUrls:");
+  // console.log(userUrls)
   // console.log("DB is:");
   // console.log(urlDatabase[req.params.id].userID);
 
-  if (!user) {
-    res.status(401).send("You must be logged in to see this page.");
-  }
   if (!databaseOb) {
     res.status(404).send("Short URL does not exist");
+    return;
   }
-  else if (user !== urlDatabase[req.params.id].userID){
+  if (user !== urlDatabase[req.params.id].userID){
     res.status(401).send("You cannot access this.");
+    return;
   } 
+  if (!user) {
+    res.status(401).send("You must be logged in to see this page.");
+    return;
+  }
+
   res.render("urls_show", templateVars);
 
 });
