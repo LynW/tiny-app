@@ -35,7 +35,7 @@ const urlDatabase = {
 const urlDatabaseMapper = function(database) {
   let obj = {};
   for (let data in database) {
-    obj[data] = database[data].longURL
+    obj[data] = database[data].longURL;
   }
   return obj
 };
@@ -49,11 +49,10 @@ console.log("URL Database" , urldb);
 app.get("/", (req, res) => {
   const templateVars = { 
     urls: urldb,
-    user: users[req.cookies["user_id"]] 
+    user: users[req.cookies["user_id"]]
   };
   if (!req.cookies["user_id"]) {
     res.redirect("/login");
-    console.log("HECK");
   } else {
     res.render('urls_index', templateVars);
   }
