@@ -23,11 +23,11 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 
 const urlDatabase = {
-  b2xVn2: {
+  b2xVn2 : {
     longURL: "http://www.lighthouselabs.ca",
     userID: "user2RandomID"
   },
-  Osm5xK: {
+  Osm5xK : {
     longURL: "http://www.google.com",
     userID: "userRandomID"
   }
