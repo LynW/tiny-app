@@ -89,15 +89,18 @@ app.get("/urls", (req, res) => {
   }
 });
 
+
 //Create the url
 app.post("/urls", (req, res) => {
-  const urldb = urlDatabaseMapper(urlDatabase);
   const shortURL = generateRandomString();
 
   if (!req.cookies["user_id"]) {
     res.send("Not logged in - please login to shorten URLs.");
   } else {
-    urldb[shortURL] = req.body.longURL;
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userID: req.cookies["user_id"]
+    };
     res.redirect(`/urls/${shortURL}`);
   }
 });
@@ -136,11 +139,9 @@ app.post("/urls/:id/delete", (req, res) => {
   }
 });
 
-
-
 //Show information of a specific URL in our JSON
 app.get("/urls/:id", (req, res) => {
-  const urldb = urlDatabaseMapper(urlDatabase);
+  const urldb = urlDatabaseMapper(urlDatabase);  
   const databaseOb = urldb[req.params.id];
   const templateVars = {
     id: req.params.id,
