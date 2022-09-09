@@ -47,7 +47,6 @@ app.get("/urls", (req, res) => {
     user: users[req.cookies["user_id"]] 
   };
   if (!req.cookies["user_id"]) {
-    console.log("HECK");
     res.redirect("/login")
   } else {
     res.render('urls_index', templateVars);
@@ -56,10 +55,13 @@ app.get("/urls", (req, res) => {
 
 //Create the url
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
   const shortURL = generateRandomString();
+  if (!req.cookies["user_id"]) {
+    res.send("Not logged in - please login to shorten URLs.");
+  } else {
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
+  }
 });
 
 //Delete the url
@@ -73,11 +75,7 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]]
   };
-  if (!req.cookies["user_ID"]) {
-    res.redirect("/login")
-  } else {
     res.render('urls_new', templateVars);
-  }
 });
 
 //Show information of a specific URL in our JSON
