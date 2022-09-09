@@ -96,6 +96,7 @@ app.post("/urls", (req, res) => {
 
   if (!req.cookies["user_id"]) {
     res.send("Not logged in - please login to shorten URLs.");
+    return;
   } else {
     urlDatabase[shortURL] = {
       longURL: req.body.longURL,
@@ -127,6 +128,7 @@ app.post("/urls/:id/delete", (req, res) => {
   
   if (!user) {
     res.status(401).send("You must be logged in to see this page.");
+    return;
   }
   if (user) {
     const templateVars = {
@@ -139,12 +141,15 @@ app.post("/urls/:id/delete", (req, res) => {
     res.redirect(`/urls`);
   } else {
     res.status(404).send("You do not have permision to delete");
+    return;
   }
   if (!databaseOb) {
     res.status(404).send("URL does not exist");
+    return;
   }
   if (user !== databaseOb.userID){
     res.status(401).send("You cannot access this.");
+    return;
   } 
 
 });
@@ -199,6 +204,7 @@ app.get("/u/:id", (req, res) => {
 
   if (!longURL) {
     res.status(404).send("<h1>Short URL does not exist</h1>");
+    return;
   } else {
     res.redirect(longURL);
   }
@@ -239,6 +245,7 @@ app.post('/register', (req, res) => {
   // checks if email/password are empty/email registered
   if (!req.body.email || !req.body.password || userExists) {
     res.status(404).send("<h1>Bad Request</h1>");
+    return;
   } else {
     const newUserID = generateRandomString();
     const newUser = {
@@ -270,6 +277,7 @@ app.post("/login", (req, res) => {
 
   if (!userExists || users[userExists].password !== req.body.password) {
     res.status(403).send("<h1>Access Forbidden</h1>");
+    return;
   } else {
     res.cookie('user_id', userExists);
     res.redirect('/urls');
