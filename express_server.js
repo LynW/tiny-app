@@ -181,6 +181,12 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+app.get("/urlsdb.json", (req, res) => {
+  const urldb = urlDatabaseMapper(urlDatabase);
+  res.json(urldb);
+});
+
+
 app.get("/users.json", (req, res) => {
   res.json(users);
 });
