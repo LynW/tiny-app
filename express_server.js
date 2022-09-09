@@ -58,12 +58,13 @@ const urlsForUser = function(database, id) {
 //Default page that shows index page or urls
 app.get("/", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
+  const currentUser = req.cookies["user_id"];
   const templateVars = {
     urls: urldb,
-    user: users[req.cookies["user_id"]]
+    user: users[currentUser]
   };
 
-  if (!req.cookies["user_id"]) {
+  if (!currentUser) {
     res.redirect("/login");
   } else {
     res.render('urls_index', templateVars);
@@ -72,6 +73,7 @@ app.get("/", (req, res) => {
 
 //Show our list of urls page
 app.get("/urls", (req, res) => {
+  const currentUser = req.cookies["user_id"];
   const myUrls = urlsForUser(urlDatabase, req.cookies["user_id"]);
 
   if (req.cookies["user_id"]) {
@@ -155,7 +157,6 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 //Show information of a specific URL in our JSON
-//WHEN I GET BACK - PLEASE FIX THIS SHIT
 app.get("/urls/:id", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
   const user = req.cookies["user_id"];
