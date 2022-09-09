@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 app.use(cookieParser());
@@ -33,25 +34,6 @@ const urlDatabase = {
   }
 };
 
-const urlDatabaseMapper = function(database) {
-  let obj = {};
-
-  for (const data in database) {
-    obj[data] = database[data].longURL;
-  }
-  return obj;
-};
-
-const urlsForUser = function(database, id) {
-  const userURLs = {};
-
-  for (const url in database) {
-    if (database[url].userID === id) {
-      userURLs[url] = database[url].longURL;
-    }
-  }
-  return userURLs;
-};
 
 
 
@@ -75,7 +57,8 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const currentUser = req.cookies["user_id"];
   const myUrls = urlsForUser(urlDatabase, currentUser);
-
+  console.log(currentUser);
+  console.log(Object.keysreq.cookies);
   if (currentUser) {
     const templateVars = {
       urls: myUrls,
@@ -112,6 +95,7 @@ app.post("/urls", (req, res) => {
 
 //Show the create url page
 app.get("/urls/new", (req, res) => {
+  const currentUser = req.cookies["user_id"];
   const templateVars = {
     user: users[currentUser]
   };
@@ -220,20 +204,23 @@ app.get("/register", (req, res) => {
 
 //Creates user and cookie session
 app.post('/register', (req, res) => {
-  const userExists = emailLookup(users, req.body.email);
+  const enteredPass = req.body.password;
+  const enteredEmail = req.body.email;
+  const userExists = emailLookup(users, enteredEmail);
 
   // checks if email/password are empty/email registered
-  if (!req.body.email || !req.body.password || userExists) {
+  if (!enteredEmail || !enteredPass || userExists) {
     res.status(404).send("<h1>Bad Request</h1>");
     return;
   } else {
+    const hashedPassword = bcrypt.hashSync(enteredPass, 10)
     const newUserID = generateRandomString();
     const newUser = {
       id: newUserID,
-      email: req.body.email,
-      password: req.body.password
+      email: enteredEmail,
+      password: hashedPassword
     };
-    users[newUserID] = newUser;
+    // users[newUserID] = newUser;
     res.cookie('user_id', newUserID);
     res.redirect('/urls');
   }
@@ -241,11 +228,12 @@ app.post('/register', (req, res) => {
 
 //Go to login page
 app.get("/login", (req, res) => {
+  const currentUser = req.cookies["user_id"];
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[currentUser]
   };
 
-  if (!req.cookies["user_id"]) {
+  if (!currentUser) {
     res.render('urls_login', templateVars);
   } else {
     res.redirect('/urls');
@@ -254,11 +242,18 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const userExists = emailLookup(users, req.body.email);
+  console.log(`Username entered: ${req.body.email} and password: ${req.body.password}`);
 
-  if (!userExists || users[userExists].password !== req.body.password) {
+  console.log(`Checking: ${userExists.password}`);
+  console.log(`Result: ${bcrypt.compareSync(req.body.password.toString(), userExists.password)}`);
+
+  if (!userExists) {
     res.status(403).send("<h1>Access Forbidden</h1>");
     return;
-  } else {
+  } else if (!bcrypt.compareSync(req.body.password.toString(), userExists.password)) {
+    res.status(403).send("Wrong password");
+    return;
+  } else if (bcrypt.compareSync(req.body.password.toString(), userExists.password)) {
     res.cookie('user_id', userExists);
     res.redirect('/urls');
   }
@@ -281,7 +276,7 @@ const generateRandomString = function() {
 const emailLookup = function(usersDatabase, email) {
   for (let user in usersDatabase) {
     if (usersDatabase[user].email === email) {
-      return user;
+      return usersDatabase[user];
     }
   }
   return undefined;
@@ -308,4 +303,25 @@ const deleteFunc = function(req, res) {
     res.status(401).send("You cannot access to delete this.");
     return;
   } 
-}
+};
+
+const urlDatabaseMapper = function(database) {
+  let obj = {};
+
+  for (const data in database) {
+    obj[data] = database[data].longURL;
+  }
+  return obj;
+};
+
+const urlsForUser = function(database, id) {
+  const userURLs = {};
+
+  for (const url in database) {
+    if (database[url].userID === id) {
+      userURLs[url] = database[url].longURL;
+    }
+  }
+  return userURLs;
+};
+
