@@ -24,11 +24,11 @@ app.use(express.urlencoded({ extended: true }));
 const urlDatabase = {
   b2xVn2: {
     longURL: "http://www.lighthouselabs.ca",
-    userID: "user2ID"
+    userID: "user2RandomID"
   },
   Osm5xK: { 
     longURL: "http://www.google.com",
-    userID: "user1ID"
+    userID: "userRandomID"
   }
 };
 
@@ -97,8 +97,23 @@ app.get("/urls/new", (req, res) => {
 
 //Delete the url
 app.post("/urls/:id/delete", (req, res) => {
-  delete urldb[req.params.id];
-  res.redirect('/urls');
+  // delete urldb[req.params.id];
+  // res.redirect('/urls');
+  const id = req.params.id
+  console.log("req.params.id is" + req.params.id)
+  const userId = req.cookies["user_id"];
+  console.log("req.cookies[\"user_id\"] MY USER'S ID is " + req.cookies["user_id"])
+  console.log("urlDatabase[req.params.id].userID ID LINKED TO THE RECORD is " + urlDatabase[req.params.id].userID);
+
+  if (userId === urlDatabase[req.params.id].userID) {
+    console.log("IT WORKS");
+    delete urldb[req.params.id];
+    res.redirect(`/urls`)
+  } else {
+    res.status(404).send("You do not have permision to delete");
+  }
+
+  
 });
 
 
