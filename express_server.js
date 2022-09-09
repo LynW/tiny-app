@@ -34,23 +34,34 @@ const urlDatabase = {
 
 const urlDatabaseMapper = function(database) {
   let obj = {};
-  for (let data in database) {
+
+  for (const data in database) {
     obj[data] = database[data].longURL;
   }
   return obj
 };
 
-const urldb = urlDatabaseMapper(urlDatabase);
-console.log("URL Database" , urldb);
+const urlsForUser = function(database, id) {
+  const userURLs = {};
+
+  for (const url in database) {
+    if (database[url].userID === id) {
+      userURLs[url] = database[url].longURL;
+    }
+  }
+  return userURLs;
+};
 
 
 
 //Default page that shows index page or urls
 app.get("/", (req, res) => {
+  const urldb = urlDatabaseMapper(urlDatabase);
   const templateVars = { 
     urls: urldb,
     user: users[req.cookies["user_id"]]
   };
+
   if (!req.cookies["user_id"]) {
     res.redirect("/login");
   } else {
@@ -60,20 +71,28 @@ app.get("/", (req, res) => {
 
 //Show our list of urls page
 app.get("/urls", (req, res) => {
-  const templateVars = { 
-    urls: urldb,
-    user: users[req.cookies["user_id"]] 
-  };
-  if (!req.cookies["user_id"]) {
-    res.redirect("/login")
+  const myUrls = urlsForUser(urlDatabase, req.cookies["user_id"]);
+
+  if (req.cookies["user_id"]) {
+    const templateVars = {
+      urls: myUrls,
+      user: users[req.cookies["user_id"]]
+    };
+    res.render('urls_index', templateVars);
   } else {
+    const templateVars = {
+      urls: null,
+      user: users[req.cookies["user_id"]],
+    };
     res.render('urls_index', templateVars);
   }
 });
 
 //Create the url
 app.post("/urls", (req, res) => {
+  const urldb = urlDatabaseMapper(urlDatabase);
   const shortURL = generateRandomString();
+
   if (!req.cookies["user_id"]) {
     res.send("Not logged in - please login to shorten URLs.");
   } else {
@@ -87,6 +106,7 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]]
   };
+
   if (!req.cookies["user_id"]) {
     res.redirect('/login');
   } else {
@@ -96,35 +116,30 @@ app.get("/urls/new", (req, res) => {
 
 //Delete the url
 app.post("/urls/:id/delete", (req, res) => {
-  // delete urldb[req.params.id];
-  // res.redirect('/urls');
   const id = req.params.id
-  console.log("req.params.id is" + req.params.id)
   const userId = req.cookies["user_id"];
-  console.log("req.cookies[\"user_id\"] MY USER'S ID is " + req.cookies["user_id"])
-  console.log("urlDatabase[req.params.id].userID ID LINKED TO THE RECORD is " + urlDatabase[req.params.id].userID);
+  const urldb = urlDatabaseMapper(urlDatabase);
 
   if (userId === urlDatabase[req.params.id].userID) {
-    console.log("IT WORKS");
     delete urldb[req.params.id];
     res.redirect(`/urls`)
   } else {
     res.status(404).send("You do not have permision to delete");
   }
-
-  
 });
 
 
 
 //Show information of a specific URL in our JSON
 app.get("/urls/:id", (req, res) => {
+  const urldb = urlDatabaseMapper(urlDatabase);
   const databaseOb = urldb[req.params.id];
   const templateVars = { 
     id: req.params.id, 
     longURL: urldb[req.params.id],
     user: users[req.cookies["user_id"]]
   };
+
   if (!databaseOb) {
     res.status(404).send("<h1>Short URL does not exist</h1>");
   }
@@ -133,13 +148,17 @@ app.get("/urls/:id", (req, res) => {
 
 //Update the long URL
 app.post("/urls/:id", (req, res) => {
+  const urldb = urlDatabaseMapper(urlDatabase);
   urldb[req.params.id] = req.body.longURL;
+
   res.redirect(`/urls/${req.params.id}`);
 });
 
 //Redirect to the long url
 app.get("/u/:id", (req, res) => {
+  const urldb = urlDatabaseMapper(urlDatabase);
   const longURL = urldb[req.params.id]
+
   if (!longURL) {
     res.status(404).send("<h1>Short URL does not exist</h1>")
     return
@@ -162,6 +181,7 @@ app.get("/register", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
   };
+
   if (!req.cookies["user_id"]) {
     res.render("urls_register", templateVars);
   } else {
@@ -172,7 +192,7 @@ app.get("/register", (req, res) => {
 //Creates user and cookie session
 app.post('/register', (req, res) => {
   const userExists = emailLookup(users, req.body.email);
-  console.log(userExists);
+
   // checks if email/password are empty/email registered
   if (!req.body.email || !req.body.password || userExists) {
     res.status(404).send("<h1>Bad Request</h1>")
@@ -194,6 +214,7 @@ app.get("/login", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
   };
+
   if (!req.cookies["user_id"]) {
     res.render('urls_login', templateVars);
   } else {
@@ -203,11 +224,12 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const userExists = emailLookup(users, req.body.email);
+
   if (!userExists || users[userExists].password !== req.body.password) {
     res.status(403).send("<h1>Access Forbidden</h1>")
   } else {
-  res.cookie('user_id', userExists);
-  res.redirect('/urls');
+    res.cookie('user_id', userExists);
+    res.redirect('/urls');
   }
 });
 
@@ -220,7 +242,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-function generateRandomString() {
+const generateRandomString = function() {
   let randomString = Math.random().toString(36).substring(2, 8);
   return randomString;
 }
