@@ -2,19 +2,20 @@ const express = require("express");
 const cookieParser = require('cookie-parser');
 
 const app = express();
-app.use(cookieParser())
-let users = { 
+app.use(cookieParser());
+
+let users = {
   "userRandomID": {
-    id: "user1ID", 
-    email: "user@gmail.com", 
+    id: "user1ID",
+    email: "user@gmail.com",
     password: "123"
   },
- "user2RandomID": {
-    id: "user2ID", 
-    email: "user2@gmail.com", 
+  "user2RandomID": {
+    id: "user2ID",
+    email: "user2@gmail.com",
     password: "321"
   }
-}
+};
 
 const PORT = 8080; // default port 8080
 
@@ -26,7 +27,7 @@ const urlDatabase = {
     longURL: "http://www.lighthouselabs.ca",
     userID: "user2RandomID"
   },
-  Osm5xK: { 
+  Osm5xK: {
     longURL: "http://www.google.com",
     userID: "userRandomID"
   }
@@ -38,7 +39,7 @@ const urlDatabaseMapper = function(database) {
   for (const data in database) {
     obj[data] = database[data].longURL;
   }
-  return obj
+  return obj;
 };
 
 const urlsForUser = function(database, id) {
@@ -57,7 +58,7 @@ const urlsForUser = function(database, id) {
 //Default page that shows index page or urls
 app.get("/", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
-  const templateVars = { 
+  const templateVars = {
     urls: urldb,
     user: users[req.cookies["user_id"]]
   };
@@ -96,8 +97,8 @@ app.post("/urls", (req, res) => {
   if (!req.cookies["user_id"]) {
     res.send("Not logged in - please login to shorten URLs.");
   } else {
-  urldb[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
+    urldb[shortURL] = req.body.longURL;
+    res.redirect(`/urls/${shortURL}`);
   }
 });
 
@@ -116,13 +117,13 @@ app.get("/urls/new", (req, res) => {
 
 //Delete the url
 app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id
+  const id = req.params.id;
   const userId = req.cookies["user_id"];
   const urldb = urlDatabaseMapper(urlDatabase);
 
   if (userId === urlDatabase[req.params.id].userID) {
     delete urldb[req.params.id];
-    res.redirect(`/urls`)
+    res.redirect(`/urls`);
   } else {
     res.status(404).send("You do not have permision to delete");
   }
@@ -134,16 +135,17 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
   const databaseOb = urldb[req.params.id];
-  const templateVars = { 
-    id: req.params.id, 
+  const templateVars = {
+    id: req.params.id,
     longURL: urldb[req.params.id],
     user: users[req.cookies["user_id"]]
   };
 
   if (!databaseOb) {
     res.status(404).send("<h1>Short URL does not exist</h1>");
-  }
+  } else {
     res.render("urls_show", templateVars);
+  }
 });
 
 //Update the long URL
@@ -157,11 +159,10 @@ app.post("/urls/:id", (req, res) => {
 //Redirect to the long url
 app.get("/u/:id", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
-  const longURL = urldb[req.params.id]
+  const longURL = urldb[req.params.id];
 
   if (!longURL) {
-    res.status(404).send("<h1>Short URL does not exist</h1>")
-    return
+    res.status(404).send("<h1>Short URL does not exist</h1>");
   } else {
     res.redirect(longURL);
   }
@@ -178,7 +179,7 @@ app.get("/users.json", (req, res) => {
 
 //Show our register page
 app.get("/register", (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     user: users[req.cookies["user_id"]]
   };
 
@@ -195,7 +196,7 @@ app.post('/register', (req, res) => {
 
   // checks if email/password are empty/email registered
   if (!req.body.email || !req.body.password || userExists) {
-    res.status(404).send("<h1>Bad Request</h1>")
+    res.status(404).send("<h1>Bad Request</h1>");
   } else {
     const newUserID = generateRandomString();
     const newUser = {
@@ -211,7 +212,7 @@ app.post('/register', (req, res) => {
 
 //Go to login page
 app.get("/login", (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     user: users[req.cookies["user_id"]]
   };
 
@@ -226,7 +227,7 @@ app.post("/login", (req, res) => {
   const userExists = emailLookup(users, req.body.email);
 
   if (!userExists || users[userExists].password !== req.body.password) {
-    res.status(403).send("<h1>Access Forbidden</h1>")
+    res.status(403).send("<h1>Access Forbidden</h1>");
   } else {
     res.cookie('user_id', userExists);
     res.redirect('/urls');
@@ -245,7 +246,7 @@ app.listen(PORT, () => {
 const generateRandomString = function() {
   let randomString = Math.random().toString(36).substring(2, 8);
   return randomString;
-}
+};
 
 const emailLookup = function(usersDatabase, email) {
   for (let user in usersDatabase) {
