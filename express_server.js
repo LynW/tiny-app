@@ -194,7 +194,10 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
   urldb[req.params.id] = req.body.longURL;
-
+  urlDatabase[req.params.id] = {
+    longURL: req.body.longURL,
+    userID: req.cookies["user_id"]
+  };
   res.redirect(`/urls/${req.params.id}`);
 });
 
