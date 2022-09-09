@@ -133,7 +133,7 @@ app.post("/urls/:id/delete", (req, res) => {
       user: users[req.cookies["user_id"]]
     };
   } 
-  if (user === urlDatabase[req.params.id].userID) {
+  if (user === databaseUserID ) {
     delete urlDatabase[req.params.id];
     res.redirect(`/urls`);
   } else {
