@@ -32,7 +32,12 @@ app.get("/", (req, res) => {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]] 
   };
-  res.render("urls_index", templateVars);
+  if (!req.cookies["user_id"]) {
+    res.redirect("/login");
+    console.log("HECK");
+  } else {
+    res.render('urls_index', templateVars);
+  }
 });
 
 //Show our list of urls page
@@ -41,7 +46,12 @@ app.get("/urls", (req, res) => {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]] 
   };
-  res.render("urls_index", templateVars);
+  if (!req.cookies["user_id"]) {
+    console.log("HECK");
+    res.redirect("/login")
+  } else {
+    res.render('urls_index', templateVars);
+  }
 });
 
 //Create the url
@@ -63,7 +73,11 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]]
   };
-  res.render('urls_new', templateVars);
+  if (!req.cookies["user_ID"]) {
+    res.redirect("/login")
+  } else {
+    res.render('urls_new', templateVars);
+  }
 });
 
 //Show information of a specific URL in our JSON
@@ -162,5 +176,5 @@ const emailLookup = function(usersDatabase, email) {
       return user;
     }
   }
-  return false;
+  return undefined;
 };
