@@ -117,15 +117,22 @@ app.get("/urls/new", (req, res) => {
 
 //Delete the url
 app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
   const userId = req.cookies["user_id"];
-  const urldb = urlDatabaseMapper(urlDatabase);
+  const userUrls = urlsForUser(urlDatabase, req.cookies["user_id"]);
+
+  if (req.cookies["user_id"]) {
+    const templateVars = {
+      urls: userUrls,
+      user: users[req.cookies["user_id"]]
+    };
 
   if (userId === urlDatabase[req.params.id].userID) {
-    delete urldb[req.params.id];
+    console.log("This should delete...")
+    delete urlDatabase[req.params.id];
     res.redirect(`/urls`);
   } else {
     res.status(404).send("You do not have permision to delete");
+  }
   }
 });
 
