@@ -74,18 +74,18 @@ app.get("/", (req, res) => {
 //Show our list of urls page
 app.get("/urls", (req, res) => {
   const currentUser = req.cookies["user_id"];
-  const myUrls = urlsForUser(urlDatabase, req.cookies["user_id"]);
+  const myUrls = urlsForUser(urlDatabase, currentUser);
 
-  if (req.cookies["user_id"]) {
+  if (currentUser) {
     const templateVars = {
       urls: myUrls,
-      user: users[req.cookies["user_id"]]
+      user: users[currentUser]
     };
     res.render('urls_index', templateVars);
   } else {
     const templateVars = {
       urls: null,
-      user: users[req.cookies["user_id"]],
+      user: users[currentUser],
     };
     res.render('urls_index', templateVars);
   }
@@ -95,14 +95,16 @@ app.get("/urls", (req, res) => {
 //Create the url
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
+  const currentUser = req.cookies["user_id"];
 
-  if (!req.cookies["user_id"]) {
+
+  if (!currentUser) {
     res.send("Not logged in - please login to shorten URLs.");
     return;
   } else {
     urlDatabase[shortURL] = {
       longURL: req.body.longURL,
-      userID: req.cookies["user_id"]
+      userID: currentUser
     };
     res.redirect(`/urls/${shortURL}`);
   }
@@ -111,50 +113,27 @@ app.post("/urls", (req, res) => {
 //Show the create url page
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[currentUser]
   };
 
-  if (!req.cookies["user_id"]) {
+  if (!currentUser) {
     res.redirect('/login');
   } else {
     res.render('urls_new', templateVars);
   }
 });
 
-//Delete the url
+//Delete the url on the page
 app.post("/urls/:id/delete", (req, res) => {
-  const user = req.cookies["user_id"];
-  const userUrls = urlsForUser(urlDatabase, user);
-  const databaseOb = urlDatabase[req.params.id];
-  const databaseUserID = databaseOb.userID;
-  
-  if (!user) {
-    res.status(401).send("You must be logged in to see this page.");
-    return;
-  }
-  if (user) {
-    const templateVars = {
-      urls: userUrls,
-      user: users[user]
-    };
-  } 
-  if (user === databaseUserID ) {
-    delete urlDatabase[req.params.id];
-    res.redirect(`/urls`);
-  } else {
-    res.status(404).send("You do not have permision to delete");
-    return;
-  }
-  if (!databaseOb) {
-    res.status(404).send("URL does not exist");
-    return;
-  }
-  if (user !== databaseOb.userID){
-    res.status(401).send("You cannot access this.");
-    return;
-  } 
-
+  deleteFunc(req,res);
 });
+
+//Trying to delete from a link
+app.get("/urls/:id/delete", (req, res) => {
+  deleteFunc(req, res);
+});
+
+
 
 //Show information of a specific URL in our JSON
 app.get("/urls/:id", (req, res) => {
@@ -310,3 +289,32 @@ const emailLookup = function(usersDatabase, email) {
   }
   return undefined;
 };
+
+const deleteFunc = function(req, res) {
+  const currentUser = req.cookies["user_id"];
+  const userUrls = urlsForUser(urlDatabase, currentUser);
+  const databaseOb = urlDatabase[req.params.id];
+  const databaseUserID = databaseOb.userID;
+  console.log("HEY HERE");
+  console.log(userUrls);
+  
+  if (!currentUser) {
+    res.status(401).send("You must be logged in to see this page.");
+    return;
+  }
+  if (currentUser === databaseUserID ) {
+    delete urlDatabase[req.params.id];
+    res.redirect(`/urls`);
+  } else {
+    res.status(404).send("You do not have permision to delete");
+    return;
+  }
+  if (!databaseOb) {
+    res.status(404).send("URL does not exist");
+    return;
+  }
+  if (currentUser !== databaseOb.userID){
+    res.status(401).send("You cannot access this.");
+    return;
+  } 
+}
