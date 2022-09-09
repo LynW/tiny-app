@@ -151,19 +151,16 @@ app.get("/urls/:id", (req, res) => {
   // console.log(userUrls)
   // console.log("DB is:");
   // console.log(urlDatabase[req.params.id].userID);
-
-  if (!databaseOb) {
-    res.status(404).send("Short URL does not exist");
-    return;
-  }
-  if (user !== urlDatabase[req.params.id].userID){
-    res.status(401).send("You cannot access this.");
-    return;
-  } 
   if (!user) {
     res.status(401).send("You must be logged in to see this page.");
     return;
-  }
+  } else if (!databaseOb) {
+    res.status(404).send("Short URL does not exist");
+    return;
+  } else if (user !== urlDatabase[req.params.id].userID){
+    res.status(401).send("You cannot access this.");
+    return;
+  } 
 
   res.render("urls_show", templateVars);
 
@@ -294,27 +291,21 @@ const deleteFunc = function(req, res) {
   const currentUser = req.cookies["user_id"];
   const userUrls = urlsForUser(urlDatabase, currentUser);
   const databaseOb = urlDatabase[req.params.id];
-  const databaseUserID = databaseOb.userID;
+  const databaseUserID = databaseOb?.userID;
   console.log("HEY HERE");
   console.log(userUrls);
   
   if (!currentUser) {
-    res.status(401).send("You must be logged in to see this page.");
+    res.status(401).send("You must be logged in to delete.");
     return;
-  }
-  if (currentUser === databaseUserID ) {
+  } else if (currentUser === databaseUserID ) {
     delete urlDatabase[req.params.id];
     res.redirect(`/urls`);
-  } else {
-    res.status(404).send("You do not have permision to delete");
-    return;
-  }
-  if (!databaseOb) {
+  } else if (!databaseOb) {
     res.status(404).send("URL does not exist");
     return;
-  }
-  if (currentUser !== databaseOb.userID){
-    res.status(401).send("You cannot access this.");
+  } else if (currentUser !== databaseOb.userID){
+    res.status(401).send("You cannot access to delete this.");
     return;
   } 
 }
