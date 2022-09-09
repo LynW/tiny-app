@@ -121,16 +121,17 @@ app.get("/urls/new", (req, res) => {
 //Delete the url
 app.post("/urls/:id/delete", (req, res) => {
   const user = req.cookies["user_id"];
-  const userUrls = urlsForUser(urlDatabase, req.cookies["user_id"]);
+  const userUrls = urlsForUser(urlDatabase, user);
   const databaseOb = urlDatabase[req.params.id];
+  const databaseUserID = urlDatabase[req.params.id].userID;
   
   if (!user) {
     res.status(401).send("You must be logged in to see this page.");
   }
-  if (req.cookies["user_id"]) {
+  if (user) {
     const templateVars = {
       urls: userUrls,
-      user: users[req.cookies["user_id"]]
+      user: users[user]
     };
   } 
   if (user === databaseUserID ) {
