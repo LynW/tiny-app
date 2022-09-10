@@ -1,7 +1,6 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
-
 const app = express();
 app.use(cookieParser());
 
@@ -18,11 +17,6 @@ const users = {
   }
 };
 
-const PORT = 8080; // default port 8080
-
-app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }));
-
 const urlDatabase = {
   b2xVn2 : {
     longURL: "http://www.lighthouselabs.ca",
@@ -34,8 +28,9 @@ const urlDatabase = {
   }
 };
 
-
-
+const PORT = 8080; // default port 8080
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true }));
 
 //Default page that shows index page or urls
 app.get("/", (req, res) => {
@@ -123,17 +118,12 @@ app.get("/urls/:id", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
   const user = req.cookies["user_id"];
   const databaseOb = urldb[req.params.id];
-  const userUrls = urlsForUser(urlDatabase, user);
   const templateVars = {
     id: req.params.id,
     longURL: databaseOb,
     user: users[user]
   };
 
-  // console.log("userUrls:");
-  // console.log(userUrls)
-  // console.log("DB is:");
-  // console.log(urlDatabase[req.params.id].userID);
   if (!user) {
     res.status(401).send("You must be logged in to see this page.");
     return;
@@ -153,6 +143,7 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
   urldb[req.params.id] = req.body.longURL;
+  
   urlDatabase[req.params.id] = {
     longURL: req.body.longURL,
     userID: req.cookies["user_id"]
@@ -241,18 +232,15 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const userExists = emailLookup(users, req.body.email);
-  console.log(`Username entered: ${req.body.email} and password: ${req.body.password}`);
-
-  console.log(`Checking: ${userExists.password}`);
-  console.log(`Result: ${bcrypt.compareSync(req.body.password.toString(), userExists.password)}`);
+  const enteredPass = req.body.password.toString();
 
   if (!userExists) {
     res.status(403).send("<h1>Access Forbidden</h1>");
     return;
-  } else if (!bcrypt.compareSync(req.body.password.toString(), userExists.password)) {
+  } else if (!bcrypt.compareSync(enteredPass, userExists.password)) {
     res.status(403).send("Wrong password");
     return;
-  } else if (bcrypt.compareSync(req.body.password.toString(), userExists.password)) {
+  } else if (bcrypt.compareSync(enteredPass, userExists.password)) {
     res.cookie('user_id', userExists);
     res.redirect('/urls');
   }
@@ -286,14 +274,13 @@ const deleteFunc = function(req, res) {
   const userUrls = urlsForUser(urlDatabase, currentUser);
   const databaseOb = urlDatabase[req.params.id];
   const databaseUserID = databaseOb?.userID;
-  console.log("HEY HERE");
-  console.log(userUrls);
+
   
   if (!currentUser) {
     res.status(401).send("You must be logged in to delete.");
     return;
   } else if (currentUser === databaseUserID ) {
-    delete urlDatabase[req.params.id];
+    delete databaseOb;
     res.redirect(`/urls`);
   } else if (!databaseOb) {
     res.status(404).send("URL does not exist");
