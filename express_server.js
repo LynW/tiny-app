@@ -8,38 +8,14 @@ const {
   urlDatabaseMapper,
   getUserByEmail,
 } = require('./helpers');
-
+const urlDatabase = require('./database.db');
+const users = require('./users.db');
 
 app.use(cookieSession({
   name: 'session',
   keys: ['aKey'],
   maxAge: 24 * 60 * 60 * 1000
 }));
-
-const users = {
-  "userRandomID": {
-    id: "user1ID",
-    email: "user@gmail.com",
-    password: "123"
-  },
-  "user2RandomID": {
-    id: "user2ID",
-    email: "user2@gmail.com",
-    password: "321"
-  }
-};
-
-const urlDatabase = {
-  b2xVn2 : {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "user2RandomID"
-  },
-  Osm5xK : {
-    longURL: "http://www.google.com",
-    userID: "userRandomID"
-  }
-};
-
 
 const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
