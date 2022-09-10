@@ -2,6 +2,12 @@ const express = require("express");
 const app = express();
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const {
+  generateRandomString,
+  urlsForUser,
+  urlDatabaseMapper,
+  emailLookup,
+} = require('./helpers');
 
 
 app.use(cookieSession({
@@ -33,6 +39,7 @@ const urlDatabase = {
     userID: "userRandomID"
   }
 };
+
 
 const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
@@ -112,14 +119,21 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-//Delete the url on the page
-app.post("/urls/:id/delete", (req, res) => {
-  deleteFunc(req,res);
-});
 
 //Trying to delete from a link
-app.get("/urls/:id/delete", (req, res) => {
-  deleteFunc(req, res);
+app.post("/urls/:id/delete", (req, res) => {
+  const currentUser = req.session.user_id;
+  const dbUsers = urlDatabase[req.params.id].userID;
+
+  if (!currentUser) {
+    res.status(401).send("You must be logged in to delete.");
+    return;
+  } else if (!dbUsers) {
+    res.status(404).send("URL does not exist");
+    return;
+  } 
+  delete urlDatabase[req.params.id];
+  res.redirect(`/urls`);
 });
 
 
@@ -209,13 +223,13 @@ app.post('/register', (req, res) => {
   const enteredPass = req.body.password;
   const enteredEmail = req.body.email;
   const userExists = emailLookup(users, enteredEmail);
+  const hashedPassword = bcrypt.hashSync(enteredPass, 10)
 
   // checks if email/password are empty/email registered
   if (!enteredEmail || !enteredPass || userExists) {
     res.status(404).send("<h1>Bad Request</h1>");
     return;
   } else {
-    const hashedPassword = bcrypt.hashSync(enteredPass, 10)
     const newUserID = generateRandomString();
     users[newUserID] = {
       id: newUserID,
@@ -259,65 +273,9 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-const generateRandomString = function() {
-  let randomString = Math.random().toString(36).substring(2, 8);
-  return randomString;
-};
-
-const emailLookup = function(usersDatabase, email) {
-  for (let user in usersDatabase) {
-    if (usersDatabase[user].email === email) {
-      return usersDatabase[user];
-    }
-  }
-  return undefined;
-};
-
-const deleteFunc = function(req, res) {
-  const currentUser = req.session.user_id;
-  const databaseOb = urlDatabase[req.params.id];
-  const databaseUserID = databaseOb?.userID;
-
-  
-  if (!currentUser) {
-    res.status(401).send("You must be logged in to delete.");
-    return;
-  } else if (currentUser === databaseUserID ) {
-    delete databaseOb;
-    res.redirect(`/urls`);
-  } else if (!databaseOb) {
-    res.status(404).send("URL does not exist");
-    return;
-  } else if (currentUser !== databaseOb.userID){
-    res.status(401).send("You cannot access to delete this.");
-    return;
-  } 
-};
-
-const urlDatabaseMapper = function(database) {
-  let obj = {};
-
-  for (const data in database) {
-    obj[data] = database[data].longURL;
-  }
-  return obj;
-};
-
-const urlsForUser = function(database, id) {
-  const userURLs = {};
-
-  for (const url in database) {
-    if (database[url].userID === id) {
-      userURLs[url] = database[url].longURL;
-    }
-  }
-  return userURLs;
-};
-
