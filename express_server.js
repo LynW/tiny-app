@@ -1,8 +1,14 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
-const bcrypt = require('bcryptjs');
 const app = express();
-app.use(cookieParser());
+const cookieSession = require('cookie-session');
+const bcrypt = require('bcryptjs');
+
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ['aKey'],
+  maxAge: 24 * 60 * 60 * 1000
+}));
 
 const users = {
   "userRandomID": {
@@ -34,23 +40,28 @@ app.use(express.urlencoded({ extended: true }));
 
 //Default page that shows index page or urls
 app.get("/", (req, res) => {
-  const urldb = urlDatabaseMapper(urlDatabase);
-  const currentUser = req.cookies["user_id"];
-  const templateVars = {
-    urls: urldb,
-    user: users[currentUser]
-  };
+  const currentUser = req.session.user_id;
+  console.log(currentUser);
+  const myUrls = urlsForUser(urlDatabase, currentUser);
 
-  if (!currentUser) {
-    res.redirect("/login");
+  if (currentUser) {
+    const templateVars = {
+      urls: myUrls,
+      user: users[currentUser]
+    };
+    res.render('urls_index', templateVars);
   } else {
+    const templateVars = {
+      urls: null,
+      user: users[currentUser],
+    };
     res.render('urls_index', templateVars);
   }
 });
 
 //Show our list of urls page
 app.get("/urls", (req, res) => {
-  const currentUser = req.cookies["user_id"];
+  const currentUser = req.session.user_id;
   const myUrls = urlsForUser(urlDatabase, currentUser);
 
   if (currentUser) {
@@ -72,7 +83,7 @@ app.get("/urls", (req, res) => {
 //Create the url
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  const currentUser = req.cookies["user_id"];
+  const currentUser = req.session.user_id;
 
 
   if (!currentUser) {
@@ -89,7 +100,7 @@ app.post("/urls", (req, res) => {
 
 //Show the create url page
 app.get("/urls/new", (req, res) => {
-  const currentUser = req.cookies["user_id"];
+  const currentUser = req.session.user_id;
   const templateVars = {
     user: users[currentUser]
   };
@@ -116,21 +127,21 @@ app.get("/urls/:id/delete", (req, res) => {
 //Show information of a specific URL in our JSON
 app.get("/urls/:id", (req, res) => {
   const urldb = urlDatabaseMapper(urlDatabase);
-  const user = req.cookies["user_id"];
+  const currentUser = req.session.user_id;
   const databaseOb = urldb[req.params.id];
   const templateVars = {
     id: req.params.id,
     longURL: databaseOb,
-    user: users[user]
+    user: users[currentUser]
   };
 
-  if (!user) {
+  if (!currentUser) {
     res.status(401).send("You must be logged in to see this page.");
     return;
   } else if (!databaseOb) {
     res.status(404).send("Short URL does not exist");
     return;
-  } else if (user !== urlDatabase[req.params.id].userID){
+  } else if (currentUser !== urlDatabase[req.params.id].userID){
     res.status(401).send("You cannot access this.");
     return;
   } 
@@ -146,7 +157,7 @@ app.post("/urls/:id", (req, res) => {
   
   urlDatabase[req.params.id] = {
     longURL: req.body.longURL,
-    userID: req.cookies["user_id"]
+    userID: req.session.user_id
   };
   res.redirect(`/urls/${req.params.id}`);
 });
@@ -181,11 +192,12 @@ app.get("/users.json", (req, res) => {
 
 //Show our register page
 app.get("/register", (req, res) => {
+  const currentUser = req.session.user_id;
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[currentUser]
   };
 
-  if (!req.cookies["user_id"]) {
+  if (!currentUser) {
     res.render("urls_register", templateVars);
   } else {
     res.redirect('/urls');
@@ -210,15 +222,14 @@ app.post('/register', (req, res) => {
       email: enteredEmail,
       password: hashedPassword
     };
-    // users[newUserID] = newUser;
-    res.cookie('user_id', newUserID);
+    req.session.user_id = newUserID;
     res.redirect('/urls');
   }
 });
 
 //Go to login page
 app.get("/login", (req, res) => {
-  const currentUser = req.cookies["user_id"];
+  const currentUser = req.session.user_id;
   const templateVars = {
     user: users[currentUser]
   };
@@ -247,7 +258,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -270,8 +281,7 @@ const emailLookup = function(usersDatabase, email) {
 };
 
 const deleteFunc = function(req, res) {
-  const currentUser = req.cookies["user_id"];
-  const userUrls = urlsForUser(urlDatabase, currentUser);
+  const currentUser = req.session.user_id;
   const databaseOb = urlDatabase[req.params.id];
   const databaseUserID = databaseOb?.userID;
 
