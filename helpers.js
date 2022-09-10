@@ -3,7 +3,7 @@ const generateRandomString = function() {
   return randomString;
 };
 
-const emailLookup = function(usersDatabase, email) {
+const getUserByEmail = function(usersDatabase, email) {
   for (let user in usersDatabase) {
     if (usersDatabase[user].email === email) {
       return usersDatabase[user];
@@ -37,5 +37,5 @@ module.exports = {
   generateRandomString,
   urlsForUser,
   urlDatabaseMapper,
-  emailLookup,
+  getUserByEmail,
 };

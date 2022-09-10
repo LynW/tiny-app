@@ -6,7 +6,7 @@ const {
   generateRandomString,
   urlsForUser,
   urlDatabaseMapper,
-  emailLookup,
+  getUserByEmail,
 } = require('./helpers');
 
 
@@ -222,7 +222,7 @@ app.get("/register", (req, res) => {
 app.post('/register', (req, res) => {
   const enteredPass = req.body.password;
   const enteredEmail = req.body.email;
-  const userExists = emailLookup(users, enteredEmail);
+  const userExists = getUserByEmail(users, enteredEmail);
   const hashedPassword = bcrypt.hashSync(enteredPass, 10)
 
   // checks if email/password are empty/email registered
@@ -256,7 +256,7 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const userExists = emailLookup(users, req.body.email);
+  const userExists = getUserByEmail(users, req.body.email);
   const enteredPass = req.body.password.toString();
 
   if (!userExists) {
