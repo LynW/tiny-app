@@ -107,7 +107,7 @@ app.post("/urls/:id/delete", (req, res) => {
   } else if (!dbUsers) {
     res.status(404).send("URL does not exist");
     return;
-  } 
+  }
   delete urlDatabase[req.params.id];
   res.redirect(`/urls`);
 });
@@ -131,10 +131,10 @@ app.get("/urls/:id", (req, res) => {
   } else if (!databaseOb) {
     res.status(404).send("Short URL does not exist");
     return;
-  } else if (currentUser !== urlDatabase[req.params.id].userID){
+  } else if (currentUser !== urlDatabase[req.params.id].userID) {
     res.status(401).send("You cannot access this.");
     return;
-  } 
+  }
 
   res.render("urls_show", templateVars);
 
@@ -199,7 +199,7 @@ app.post('/register', (req, res) => {
   const enteredPass = req.body.password;
   const enteredEmail = req.body.email;
   const userExists = getUserByEmail(users, enteredEmail);
-  const hashedPassword = bcrypt.hashSync(enteredPass, 10)
+  const hashedPassword = bcrypt.hashSync(enteredPass, 10);
 
   // checks if email/password are empty/email registered
   if (!enteredEmail || !enteredPass || userExists) {
