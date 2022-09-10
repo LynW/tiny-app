@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const app = express();
 app.use(cookieParser());
 
-let users = {
+const users = {
   "userRandomID": {
     id: "user1ID",
     email: "user@gmail.com",
@@ -57,8 +57,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const currentUser = req.cookies["user_id"];
   const myUrls = urlsForUser(urlDatabase, currentUser);
-  console.log(currentUser);
-  console.log(Object.keysreq.cookies);
+
   if (currentUser) {
     const templateVars = {
       urls: myUrls,
@@ -215,7 +214,7 @@ app.post('/register', (req, res) => {
   } else {
     const hashedPassword = bcrypt.hashSync(enteredPass, 10)
     const newUserID = generateRandomString();
-    const newUser = {
+    users[newUserID] = {
       id: newUserID,
       email: enteredEmail,
       password: hashedPassword
