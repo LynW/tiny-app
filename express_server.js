@@ -221,7 +221,7 @@ app.post('/register', (req, res) => {
 app.get("/login", (req, res) => {
   const currentUser = req.session.user_id;
   const templateVars = {
-    user: users[currentUser]
+    user: currentUser
   };
 
   if (!currentUser) {
@@ -233,17 +233,18 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const userExists = getUserByEmail(users, req.body.email);
-  const enteredPass = req.body.password.toString();
+  const enteredPass = req.body.password;
 
   if (!userExists) {
-    res.status(403).send("<h1>Access Forbidden</h1>");
-    return;
-  } else if (!bcrypt.compareSync(enteredPass, userExists.password)) {
-    res.status(403).send("Wrong password");
-    return;
-  } else if (bcrypt.compareSync(enteredPass, userExists.password)) {
-    res.cookie('user_id', userExists);
-    res.redirect('/urls');
+    res.status(403).send("User doesn't exist");
+  } else {
+    const matchingPass = bcrypt.compareSync(enteredPass, userExists.password);
+    if (matchingPass) {
+      req.session.user_id = userExists.id;
+      res.redirect('/urls');
+    } else {
+      res.status(403).send("Wrong Password");
+    }
   }
 });
 

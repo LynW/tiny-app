@@ -9,7 +9,6 @@ const getUserByEmail = function(usersDatabase, email) {
       return usersDatabase[user];
     }
   }
-  return undefined;
 };
 
 const urlDatabaseMapper = function(database) {
