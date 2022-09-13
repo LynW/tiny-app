@@ -220,11 +220,12 @@ app.post('/register', (req, res) => {
 //Go to login page
 app.get("/login", (req, res) => {
   const currentUser = req.session.user_id;
-  const templateVars = {
-    user: currentUser
-  };
 
   if (!currentUser) {
+    const templateVars = {
+      error: false,
+      user: users[currentUser]
+    };
     res.render('urls_login', templateVars);
   } else {
     res.redirect('/urls');
@@ -233,17 +234,22 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const userExists = getUserByEmail(users, req.body.email);
+  const currentUser = req.session.user_id;
   const enteredPass = req.body.password;
+  const templateVars = {
+    user: users[currentUser],
+    error: true
+  };
 
   if (!userExists) {
-    res.status(403).send("User doesn't exist");
+    res.render('urls_login', templateVars);
   } else {
     const matchingPass = bcrypt.compareSync(enteredPass, userExists.password);
     if (matchingPass) {
       req.session.user_id = userExists.id;
       res.redirect('/urls');
     } else {
-      res.status(403).send("Wrong Password");
+      res.render('urls_login', templateVars);
     }
   }
 });
