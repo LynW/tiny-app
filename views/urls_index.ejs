@@ -19,6 +19,9 @@
   <body>
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
+      <% if (notLoggedIn) { %>
+        <div class="alert alert-danger text-center" role="alert">No URLs to show - Not logged in.</div>
+      <% } %>
       <h3>My URLs</h3>
       <table class="table">
         <thead>

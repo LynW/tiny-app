@@ -23,23 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 
 //Default page that shows index page or urls
 app.get("/", (req, res) => {
-  const currentUser = req.session.user_id;
-  console.log(currentUser);
-  const myUrls = urlsForUser(urlDatabase, currentUser);
-
-  if (currentUser) {
-    const templateVars = {
-      urls: myUrls,
-      user: users[currentUser]
-    };
-    res.render('urls_index', templateVars);
-  } else {
-    const templateVars = {
-      urls: null,
-      user: users[currentUser],
-    };
-    res.render('urls_index', templateVars);
-  }
+ res.redirect('/urls');
 });
 
 //Show our list of urls page
@@ -50,13 +34,15 @@ app.get("/urls", (req, res) => {
   if (currentUser) {
     const templateVars = {
       urls: myUrls,
-      user: users[currentUser]
+      user: users[currentUser],
+      notLoggedIn: false
     };
     res.render('urls_index', templateVars);
   } else {
     const templateVars = {
       urls: null,
       user: users[currentUser],
+      notLoggedIn: true
     };
     res.render('urls_index', templateVars);
   }
@@ -149,7 +135,7 @@ app.post("/urls/:id", (req, res) => {
     longURL: req.body.longURL,
     userID: req.session.user_id
   };
-  res.redirect(`/urls/${req.params.id}`);
+  res.redirect(`/urls`);
 });
 
 //Redirect to the long url
