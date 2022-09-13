@@ -19,9 +19,6 @@
   <body>
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
-      <% if (error) { %>
-        <div class="alert alert-danger text-center" role="alert">Incorrect email/password.</div>
-      <% } %>
       <h3>Login</h3>
       <form action="/login" method="POST">
         <div class="form-group">
@@ -34,7 +31,6 @@
         </div>
         <button type="submit" class="btn btn-primary">Login</button>
       </form>
-
     </main>
     <!-- Bootstrap JS -->
     <script
