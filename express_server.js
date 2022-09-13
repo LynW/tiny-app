@@ -24,7 +24,6 @@ app.use(express.urlencoded({ extended: true }));
 //Default page that shows index page or urls
 app.get("/", (req, res) => {
   const currentUser = req.session.user_id;
-  console.log(currentUser);
   const myUrls = urlsForUser(urlDatabase, currentUser);
 
   if (currentUser) {
@@ -219,12 +218,15 @@ app.post('/register', (req, res) => {
 
 //Go to login page
 app.get("/login", (req, res) => {
-  const currentUser = req.session.user_id;
-  const templateVars = {
-    user: currentUser
-  };
+  let currentUser = req.session.user_id;
+  const wrongPass = false;
 
   if (!currentUser) {
+    
+    const templateVars = {
+      user: users[currentUser],
+      error: wrongPass
+    };
     res.render('urls_login', templateVars);
   } else {
     res.redirect('/urls');
@@ -234,16 +236,22 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const userExists = getUserByEmail(users, req.body.email);
   const enteredPass = req.body.password;
+  const wrongPass = true;
+  let currentUser = req.session.user_id;
+  const templateVars = {
+    user: users[currentUser],
+    error: wrongPass
+  };
 
   if (!userExists) {
-    res.status(403).send("User doesn't exist");
+    res.render('urls_login', templateVars);
   } else {
     const matchingPass = bcrypt.compareSync(enteredPass, userExists.password);
     if (matchingPass) {
-      req.session.user_id = userExists.id;
+      currentUser = userExists.id;
       res.redirect('/urls');
     } else {
-      res.status(403).send("Wrong Password");
+      res.render('urls_login', templateVars);
     }
   }
 });
