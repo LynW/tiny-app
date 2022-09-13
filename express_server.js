@@ -184,7 +184,9 @@ app.get("/users.json", (req, res) => {
 app.get("/register", (req, res) => {
   const currentUser = req.session.user_id;
   const templateVars = {
-    user: users[currentUser]
+    user: users[currentUser],
+    errorEmailPass: false,
+    userExisting: false,
   };
 
   if (!currentUser) {
@@ -198,13 +200,24 @@ app.get("/register", (req, res) => {
 app.post('/register', (req, res) => {
   const enteredPass = req.body.password;
   const enteredEmail = req.body.email;
+  const currentUser = req.session.user_id;
   const userExists = getUserByEmail(users, enteredEmail);
   const hashedPassword = bcrypt.hashSync(enteredPass, 10);
 
   // checks if email/password are empty/email registered
-  if (!enteredEmail || !enteredPass || userExists) {
-    res.status(404).send("<h1>Bad Request</h1>");
-    return;
+  if (!enteredEmail || !enteredPass ) {
+    const templateVars = {
+      errorEmailPass: true,
+      user: users[currentUser]
+    };
+    res.render('urls_register', templateVars);
+  } else if (userExists) {
+    const templateVars = {
+      errorEmailPass: false,
+      userExisting: true,
+      user: users[currentUser]
+    };
+    res.render('urls_register', templateVars);
   } else {
     const newUserID = generateRandomString();
     users[newUserID] = {
@@ -223,7 +236,8 @@ app.get("/login", (req, res) => {
 
   if (!currentUser) {
     const templateVars = {
-      error: false,
+      userNotExists: false,
+      wrongPassword:false,
       user: users[currentUser]
     };
     res.render('urls_login', templateVars);
@@ -236,12 +250,14 @@ app.post("/login", (req, res) => {
   const userExists = getUserByEmail(users, req.body.email);
   const currentUser = req.session.user_id;
   const enteredPass = req.body.password;
-  const templateVars = {
-    user: users[currentUser],
-    error: true
-  };
+  
 
   if (!userExists) {
+    const templateVars = {
+      user: users[currentUser],
+      userNotExists: true,
+      wrongPassword: false
+    }
     res.render('urls_login', templateVars);
   } else {
     const matchingPass = bcrypt.compareSync(enteredPass, userExists.password);
@@ -249,6 +265,11 @@ app.post("/login", (req, res) => {
       req.session.user_id = userExists.id;
       res.redirect('/urls');
     } else {
+      const templateVars = {
+        user: users[currentUser],
+        wrongPassword: true,
+        userNotExists: false,
+      }
       res.render('urls_login', templateVars);
     }
   }

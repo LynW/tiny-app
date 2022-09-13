@@ -19,8 +19,10 @@
   <body>
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
-      <% if (error) { %>
-        <div class="alert alert-danger text-center" role="alert">Incorrect email/password.</div>
+      <% if (userNotExists) { %>
+        <div class="alert alert-danger text-center" role="alert">User does not exist.</div>
+      <% } else if (wrongPassword) { %>
+        <div class="alert alert-danger text-center" role="alert">Wrong password</div>
       <% } %>
       <h3>Login</h3>
       <form action="/login" method="POST">
